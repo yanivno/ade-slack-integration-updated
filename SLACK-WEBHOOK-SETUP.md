@@ -41,6 +41,15 @@ Add the webhook URL to `/src/functions/local.settings.json`:
 }
 ```
 
+
+### 7. Get OAuth token and update scopes (if needed)
+If your application requires more advanced interactions (like posting as a user), you may need to set up OAuth tokens and scopes:
+- In the left sidebar, click **"OAuth & Permissions"**
+- Under **"Scopes"**, add necessary scopes - 'chat:write', 'incoming-webhook', 'channels:read', 'users:read', 'users:read.email'
+- Install or Reinstall the app to your workspace to apply changes
+
+once done, copy the **OAuth Access Token** and update SLACK_TOKEN env variable.
+
 ## Quick Test
 
 You can test it immediately with curl:
