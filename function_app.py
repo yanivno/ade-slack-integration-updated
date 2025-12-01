@@ -573,7 +573,7 @@ def send_slack_notification(categorized_envs: Dict[str, List[Dict]], total_count
     
     if total_count == 0:
         message = "✅ All Azure Deployment Environments are healthy - no expiration warnings."
-        payload = {"type":"text", "text": message}
+        payload = [{ "type": "section", "text": { "type" : "plain_text", "text": message} }]
     else:
         expired_count = len(categorized_envs['expired'])
         tomorrow_count = len(categorized_envs['tomorrow'])
