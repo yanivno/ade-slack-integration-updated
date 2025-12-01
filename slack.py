@@ -45,7 +45,7 @@ def get_user_by_email(email):
         return None
     return resp['user']['id']
     
-def send_slack_message(channel, message):
+def send_slack_message(channel, message="", json_blocks=None):
     # Implement the logic to send a Slack message
     # This function remains unchanged from your original code
     slack_token = get_slack_token()
@@ -59,11 +59,17 @@ def send_slack_message(channel, message):
         'text': message,
         'link_names': True
     }
+    if json_blocks is not None:
+        data['blocks'] = json.dumps(json_blocks)
+
     request_url = api + 'chat.postMessage'
     r = http.request('POST', request_url, fields=data)
     if r.status != 200:
+        logging.info(f"Slack API returned status code {r.status}")
+        logging.info(f"Response data: {r.data.decode('utf-8')}")
         return False
     return True
+    
 
 def modify_email(email):
     """

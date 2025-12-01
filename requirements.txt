@@ -6,3 +6,4 @@ azure-mgmt-devcenter>=1.0.0
 azure-developer-devcenter>=1.0.0
 python-dateutil>=2.8.0
 urllib3
+dotenv

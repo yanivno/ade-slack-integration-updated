@@ -573,7 +573,7 @@ def send_slack_notification(categorized_envs: Dict[str, List[Dict]], total_count
     
     if total_count == 0:
         message = "✅ All Azure Deployment Environments are healthy - no expiration warnings."
-        payload = {"text": message}
+        payload = {"type":"text", "text": message}
     else:
         expired_count = len(categorized_envs['expired'])
         tomorrow_count = len(categorized_envs['tomorrow'])
@@ -665,7 +665,7 @@ def send_slack_notification(categorized_envs: Dict[str, List[Dict]], total_count
             }]
         })
         
-        payload = {"text": text, "blocks": blocks}
+        payload = blocks
     
     if mock_mode:
         logger.info(f"[MOCK] Would send Slack notification")
@@ -673,7 +673,7 @@ def send_slack_notification(categorized_envs: Dict[str, List[Dict]], total_count
         return True
     
     try:
-        sent = slack_integration.send_slack_message(channel_id, payload)
+        sent = slack_integration.send_slack_message(channel_id,"", payload)
         logger.info("Slack notification sent successfully" if sent else "Failed to send Slack notification")
         return True
     except Exception as e:
@@ -718,3 +718,15 @@ def expirationDateNotice(myTimer: func.TimerRequest) -> None:
         except Exception as inner_e:
             logger.error(f"Failed to send error notification: {str(inner_e)}")
         raise
+
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+    # This block is only for local testing, not needed in Azure Functions
+    load_dotenv()  # Load environment variables from .env file
+    logging.basicConfig(level=logging.INFO)
+    class DummyTimer:
+        past_due = False
+    expirationDateNotice(DummyTimer())
+    logging.warning('Local test executed successfully.')
