@@ -1,7 +1,6 @@
 import urllib3
 import json
 import logging
-import re
 import os
       
 def get_slack_token():
@@ -25,7 +24,7 @@ def extract_budget_details(message):
                 value = key_value[1].strip()
                 budget_details[key] = value
                 
-    logger.info("Extracted budget details: %s", budget_details)
+    logging.info("Extracted budget details: %s", budget_details)
     return budget_details
 
 
@@ -95,7 +94,7 @@ def parse_amount(amount_string):
     try:
         return float(cleaned_string)
     except ValueError as e:
-        logger.error(f"Could not convert string to float: '{amount_string}' - {str(e)}")
+        logging.error(f"Could not convert string to float: '{amount_string}' - {str(e)}")
         return None
 
 def format_slack_message(user_name, account_id, budget_details):
