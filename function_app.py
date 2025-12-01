@@ -4,7 +4,7 @@ import os
 import json
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, Tuple
-import aws_slack as slack_integration
+import slack as slack_integration
 
 # Configure logging first
 logging.basicConfig(level=logging.INFO)
@@ -563,10 +563,10 @@ def send_personal_slack_notification(env: Dict[str, List[Dict]]) -> bool:
 
 def send_slack_notification(categorized_envs: Dict[str, List[Dict]], total_count: int) -> bool:
     """Send Slack notification about expiring environments."""
-    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    channel_id = os.environ.get("SLACK_CHANNEL_ID")
     
-    if not webhook_url:
-        logger.warning("SLACK_WEBHOOK_URL not configured")
+    if not channel_id:
+        logger.warning("SLACK_CHANNEL_ID not configured")
         return False
     
     mock_mode = os.environ.get("SLACK_MOCK", "0") in ("1", "true", "True")
@@ -673,9 +673,8 @@ def send_slack_notification(categorized_envs: Dict[str, List[Dict]], total_count
         return True
     
     try:
-        response = requests.post(webhook_url, json=payload, timeout=10)
-        response.raise_for_status()
-        logger.info("Slack notification sent successfully")
+        sent = slack_integration.send_slack_message(channel_id, payload)
+        logger.info("Slack notification sent successfully" if sent else "Failed to send Slack notification")
         return True
     except Exception as e:
         logger.error(f"Failed to send Slack notification: {e}")
@@ -701,10 +700,10 @@ def expirationDateNotice(myTimer: func.TimerRequest) -> None:
         # send notifications to env owners
         success_personal = send_personal_slack_notification(categorized_envs)
 
-        # send summary notification to webhook channel
-        success_webhook = send_slack_notification(categorized_envs, total_count)
+        # send summary notification to monitor channel
+        success_channel = send_slack_notification(categorized_envs, total_count)
 
-        if  success_personal and success_webhook:
+        if  success_personal and success_channel:
             logger.info("Monitor completed successfully")
         else:
             logger.warning("Monitor completed with warnings")
@@ -714,17 +713,8 @@ def expirationDateNotice(myTimer: func.TimerRequest) -> None:
         
         # Send error notification
         try:
-            webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
-            if webhook_url and os.environ.get("SLACK_MOCK", "0") not in ("1", "true", "True"):
-                error_payload = {
-                    "text": f"❌ ADE Expiration Monitor Failed",
-                    "blocks": [{
-                        "type": "section",
-                        "text": {"type": "mrkdwn", "text": f"*Error:* {str(e)}"}
-                    }]
-                }
-                requests.post(webhook_url, json=error_payload, timeout=10)
-        except:
-            pass
-        
+            error_message = f"❌ ADE Expiration Monitor encountered an error: {str(e)}"
+            slack_integration.send_slack_message(os.environ.get("SLACK_CHANNEL_ID"), error_message)
+        except Exception as inner_e:
+            logger.error(f"Failed to send error notification: {str(inner_e)}")
         raise

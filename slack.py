@@ -3,53 +3,7 @@ import json
 import logging
 import re
 import os
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-def lambda_handler(event, context):
-    try:
-        # #  Extracting user's email from SSM parameter
-        # ssm = boto3.client('ssm')
-        # response = ssm.get_parameter(Name='/aft/account-request/custom-fields/owner_email_address')
-        # user_email = response['Parameter']['Value']
-        # logger.info(f"User email: {user_email}")
-
-        # Extracting budget alert details from the SNS event
-        message = event['Records'][0]['Sns']['Message']
-        logger.info("Received SNS message: %s", message)
-
-        # Extracting account ID from the SNS message
-        account_id = re.search(r"AWS Account (\d+)", message).group(1)
-
-        # Get the account email from AWS Organizations
-        orgs = boto3.client('organizations')
-        account_info = orgs.describe_account(AccountId=account_id)
-        user_email = account_info['Account']['Email']
-        logger.info(f"Original user email: {user_email}")
-        
-        # Modify email if necessary
-        user_email = modify_email(user_email)
-        logger.info(f"Modified user email: {user_email}")
-        
-        # # Extracting user name from email
-        user_name = user_email.split('@')[0]
-
-        # Extracting budget details from the message
-        budget_details = extract_budget_details(message)
-
-        # Retrieving user ID for the provided email
-        user_id = get_user_by_email(user_email)
-
-        # Sending a message to Slack
-        if user_id:
-            message_sent = send_slack_message(user_id, format_slack_message(user_name, account_id, budget_details))
-            if message_sent:
-                logger.info("Budget alert message sent successfully to user: %s", user_email)
-            else:
-                logger.error("Failed to send budget alert message to user: %s", user_email)
-    except Exception as e:
-        logger.error("An error occurred: %s", str(e))
-        
+      
 def get_slack_token():
     # Retrieve Slack token from environment variable
     return os.environ.get('SLACK_TOKEN') if not None else None

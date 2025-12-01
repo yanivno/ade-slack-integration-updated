@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-
 rm Archive.zip
 
 zip -r Archive.zip .
